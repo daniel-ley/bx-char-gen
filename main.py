@@ -61,7 +61,6 @@ saving_throws = {
 'paralysis_or_turn_to_stone' : 13,
 'dragon_breath' : 16,
 'rods_staves_or_spells' : 15},
-
 }
 
 
@@ -114,13 +113,46 @@ def determine_bonuses_and_penalties(character_statistics: dict) -> dict:
 
     return bonuses_and_penalties
 
-def determine_prime_requisite_xp_mod():
-    prime_requisit_xp_mod = 0
-    if character_statistics['character_class'] == 'Fighter' \
-        and character_statistics['Str']:
-        1 == 1
+def calculate_prime_requisite_mod(attribute_value: int) -> float:
+    xp_mod = None
+    if attribute_value <= 5: xp_mod = -0.2
+    elif attribute_value >= 6 and attribute_value <= 8:   xp_mod = -0.1
+    elif attribute_value >= 9 and attribute_value <= 12:  xp_mod = 0
+    elif attribute_value >= 13 and attribute_value <= 15: xp_mod = 0.05
+    else: xp_mod = 0.1
 
-    return prime_requisit_xp_mod
+    return xp_mod
+
+def determine_prime_requisite_xp_mod(char_attributes: dict) -> float:
+    
+    if char_attributes['character_class'] == 'Fighter':
+        prime_requisite = calculate_prime_requisite_mod(char_attributes['Str'])
+    elif char_attributes['character_class'] == 'Cleric':
+        prime_requisite = calculate_prime_requisite_mod(char_attributes['Wis'])
+    elif char_attributes['character_class'] == 'Magic User':
+        prime_requisite = calculate_prime_requisite_mod(char_attributes['Int'])
+    elif char_attributes['character_class'] == 'Thief':
+        prime_requisite = calculate_prime_requisite_mod(char_attributes['Dex'])
+    elif char_attributes['character_class'] == 'Dwarf':
+        prime_requisite = calculate_prime_requisite_mod(char_attributes['Str'])
+
+    elif char_attributes['character_class'] == 'Elf':
+        if char_attributes['Str'] == 13 and char_attributes['Int'] == 16:
+            prime_requisite = 0.1
+        elif char_attributes['Str'] == 13 or char_attributes['Int'] == 13:
+            prime_requisite = 0.05
+        else:
+            prime_requisite = 0
+
+    elif char_attributes['character_class'] == 'Halfling':
+        if char_attributes['Str'] == 13 and char_attributes['Dex'] == 13:
+            prime_requisite = 0.1
+        elif char_attributes['Str'] == 13 or char_attributes['Dex'] == 13:
+            prime_requisite = 0.05
+        else:
+            prime_requisite = 0
+
+    return prime_requisite
 
 
 def determine_saving_throws(character: dict, saves: dict, wis_bonus) -> dict:
@@ -221,7 +253,10 @@ def main() -> None:
         saves = determine_saving_throws(character_attributes, saving_throws, \
             stat_bonuses['Wis'])
         gold = determine_starting_gold()
-        print(f'{character_attributes}\n{stat_bonuses}\n{saves}\n{gold}')
+        
+        print(f'{character_attributes}\n{stat_bonuses}\n{saves}\nStarting Gold : {gold}')
+        print(f'Prime Requisite XP Mod : {int(determine_prime_requisite_xp_mod(char_attributes) * 100)}%')
+        print("\n")
         
 
 if __name__ == '__main__':
