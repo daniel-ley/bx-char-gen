@@ -1,7 +1,8 @@
 from random import randint
+import copy
 
 stats = ['Str', 'Int', 'Wis', 'Dex', 'Con', 'Cha',]
-number_of_characters_to_create = 2
+number_of_characters_to_create = 100
 low_dice_result = 2
 human_weighting = 50
 
@@ -156,15 +157,16 @@ def determine_prime_requisite_xp_mod(char_attributes: dict) -> float:
 
 
 def determine_saving_throws(character: dict, saves: dict, wis_bonus) -> dict:
-    base_saves = saves[character['character_class'].lower()]
-    saves = base_saves
+    class_specific_saves = saves[character['character_class'].lower()]
+    char_saves = copy.deepcopy(class_specific_saves)
+    
     if wis_bonus != 0:
-        saves['death_ray_or_poison'] = \
-            f"{str(saves['death_ray_or_poison'] + wis_bonus)} / {saves['death_ray_or_poison']} (magic)"    
-        saves['magic_wands'] = saves['magic_wands'] - wis_bonus
-        saves['paralysis_or_turn_to_stone'] = saves['paralysis_or_turn_to_stone'] - wis_bonus
-        saves['rods_staves_or_spells'] = saves['rods_staves_or_spells'] - wis_bonus
-    return saves
+        char_saves['death_ray_or_poison'] = \
+            f"{str(int(char_saves['death_ray_or_poison']) + wis_bonus)} / {char_saves['death_ray_or_poison']} (magic)"    
+        char_saves['magic_wands'] = char_saves['magic_wands'] - wis_bonus
+        char_saves['paralysis_or_turn_to_stone'] = char_saves['paralysis_or_turn_to_stone'] - wis_bonus
+        char_saves['rods_staves_or_spells'] = char_saves['rods_staves_or_spells'] - wis_bonus
+    return char_saves
 
 
 def class_chooser(statistics_block: dict) -> dict:
