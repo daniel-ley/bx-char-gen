@@ -1,10 +1,15 @@
-from random import randint
+from random import randint, choice
 import copy
 
 stats = ['Str', 'Int', 'Wis', 'Dex', 'Con', 'Cha',]
 number_of_characters_to_create = 100
 low_dice_result = 2
 human_weighting = 50
+languages = [
+    'Bugbear', 'Dopplganger', 'Dragon', 'Dwarvish', 'Elvish', 
+    'Gargoyle', 'Gnoll', 'Gnome', 'Goblin', 'Halfling', 
+    'Harpy', 'Hobgolin', 'Kobold', 'Lizard Man', 'Medusa',
+    'Minotaur', 'Ogre', 'Orc', 'Pixie', 'Human Dialect',]
 
 saving_throws = {
 'normal_man' : 
@@ -114,6 +119,8 @@ def determine_bonuses_and_penalties(character_statistics: dict) -> dict:
 
     return bonuses_and_penalties
 
+
+
 def calculate_prime_requisite_mod(attribute_value: int) -> float:
     xp_mod = None
     if attribute_value <= 5: xp_mod = -0.2
@@ -123,6 +130,7 @@ def calculate_prime_requisite_mod(attribute_value: int) -> float:
     else: xp_mod = 0.1
 
     return xp_mod
+
 
 def determine_prime_requisite_xp_mod(char_attributes: dict) -> float:
     
@@ -241,6 +249,38 @@ def roll_hp(character: dict, con_bonus: int) -> dict:
     return character
 
 
+def determine_languages(character: dict) -> list:
+
+    languages_known = ['Common', 'Alignment Tongue',]
+    
+    if character['character_class'] == 'Dwarf':
+        languages_known += ['Dwarf', 'Gnome', 'Kobold', 'Goblin',]
+    
+    if character['character_class'] == 'Elf':
+        languages_known += ['Elvish', 'Orc', 'Hobgoblin', 'Gnoll',]
+
+    if character['Int'] >= 13 and character['Int'] <= 15:
+        additional_languages = 1
+    elif character['Int'] >= 16 and character['Int'] <= 17:
+        additional_languages = 2
+    elif character['Int'] == 18:
+        additional_languages = 3
+    else: additional_languages = 0
+
+    if additional_languages > 0:
+        candidate_languages = []
+        for language in languages:
+            if language not in languages_known:
+                candidate_languages.append(language)
+        
+        for _ in range(additional_languages):
+            new_language = choice(candidate_languages)
+            languages_known.append(new_language)
+            candidate_languages.remove(new_language)
+
+    return languages_known
+
+
 def determine_starting_gold():
     return dice_roller(3, 6, False) * 10
 
@@ -258,6 +298,7 @@ def main() -> None:
         
         print(f'{character_attributes}\n{stat_bonuses}\n{saves}\nStarting Gold : {gold}')
         print(f'Prime Requisite XP Mod : {int(determine_prime_requisite_xp_mod(char_attributes) * 100)}%')
+        print(determine_languages(character_attributes))
         print("\n")
         
 
