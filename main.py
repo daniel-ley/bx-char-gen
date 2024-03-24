@@ -11,6 +11,16 @@ languages = [
     'Harpy', 'Hobgolin', 'Kobold', 'Lizard Man', 'Medusa',
     'Minotaur', 'Ogre', 'Orc', 'Pixie', 'Human Dialect',]
 
+xp_for_second_level = {
+'cleric' :  1500,
+'dwarf' : 2200,
+'halfling' : 2000,
+'elf' : 4000,
+'fighter' : 2000,
+'magic user' : 2500,
+'thief' : 1200,
+}
+
 saving_throws = {
 'normal_man' : 
 {'death_ray_or_poison' : 14,
@@ -78,6 +88,7 @@ def dice_roller(dice_count: int, dice_size: int, reroll_low_result: bool) -> int
         if reroll_low_result == True:
 
             while result <= low_dice_result:
+                result = 0
                 result = result + randint(1, dice_size)
 
         else:
@@ -95,6 +106,46 @@ def stats_roller() -> dict:
         stat_block[characteristic] = dice_roller(3, 6, False)
 
     return stat_block
+
+
+def determine_charisma_mods(charisma_stat: int) -> dict:
+    reaction_adjustment = 0
+    max_retainers = 0
+    retainer_morale = 0
+    
+    if charisma_stat == 3:
+        reaction_adjustment = -2
+        max_retainers = 1
+        retainer_morale = 4
+    elif charisma_stat >= 4 and charisma_stat <= 5:   
+        reaction_adjustment = -1
+        max_retainers = 2
+        retainer_morale = 5
+    elif charisma_stat >= 6 and charisma_stat <= 8:
+        reaction_adjustment = -1
+        max_retainers = 3
+        retainer_morale = 6
+    elif charisma_stat >= 9 and charisma_stat <= 12:
+        reaction_adjustment = 0
+        max_retainers = 4
+        retainer_morale = 7
+    elif charisma_stat >= 13 and charisma_stat <= 15:
+        reaction_adjustment = +1
+        max_retainers = 5
+        retainer_morale = 8
+    elif charisma_stat >= 16 and charisma_stat <= 17:
+        reaction_adjustment = +1
+        max_retainers = 6
+        retainer_morale = 9
+    else: 
+        reaction_adjustment = +2
+        max_retainers = 7
+        retainer_morale = 10
+    
+    return {'reaction_adjustment': reaction_adjustment,
+        'max_retainers': max_retainers,
+        'retainer_morale': retainer_morale,
+        }
 
 
 def determine_bonuses_and_penalties(character_statistics: dict) -> dict:
@@ -118,7 +169,6 @@ def determine_bonuses_and_penalties(character_statistics: dict) -> dict:
         bonuses_and_penalties[characteristic] = bonus
 
     return bonuses_and_penalties
-
 
 
 def calculate_prime_requisite_mod(attribute_value: int) -> float:
@@ -231,20 +281,27 @@ def class_chooser(statistics_block: dict) -> dict:
 
 
 def roll_hp(character: dict, con_bonus: int) -> dict:
+
+    hp = 0
+
     if character['character_class'] == 'Cleric':
-        character['HP'] = dice_roller(1, 6, True) + con_bonus
+        hp = dice_roller(1, 6, True)
     elif character['character_class'] == 'Fighter':
-        character['HP'] = dice_roller(1, 8, True) + con_bonus
+        hp = dice_roller(1, 8, True)
     elif character['character_class'] == 'Magic User':
-        character['HP'] = dice_roller(1, 4, True) + con_bonus
+        hp = dice_roller(1, 4, True) 
     elif character['character_class'] == 'Thief':
-        character['HP'] = dice_roller(1, 4, True) + con_bonus
+        hp = dice_roller(1, 4, True)
     elif character['character_class'] == 'Dwarf':
-        character['HP'] = dice_roller(1, 8, True) + con_bonus
+        hp = dice_roller(1, 8, True)
     elif character['character_class'] == 'Elf':
-        character['HP'] = dice_roller(1, 6, True) + con_bonus
+        hp = dice_roller(1, 6, True)
     elif character['character_class'] == 'Halfling':
-        character['HP'] = dice_roller(1, 6, True) + con_bonus
+        hp = dice_roller(1, 6, True)
+
+    hp = hp + con_bonus
+    
+    character['HP'] = hp
 
     return character
 
@@ -296,9 +353,11 @@ def main() -> None:
             stat_bonuses['Wis'])
         gold = determine_starting_gold()
         
-        print(f'{character_attributes}\n{stat_bonuses}\n{saves}\nStarting Gold : {gold}')
-        print(f'Prime Requisite XP Mod : {int(determine_prime_requisite_xp_mod(char_attributes) * 100)}%')
-        print(determine_languages(character_attributes))
+        print(f'{character_attributes}\nStat Bonuses: {stat_bonuses}\n{determine_charisma_mods(char_attributes["Cha"])}')
+        print(f'{saves}\nStarting Gold : {gold}')
+        print(f'Prime Requisite XP Mod : {int(determine_prime_requisite_xp_mod(char_attributes) * 100)}%  ', end='')
+        print(f'XP for Next Level : {xp_for_second_level[char_attributes["character_class"].lower()]}')
+        print(f'Languages: {determine_languages(character_attributes)}')
         print("\n")
         
 
