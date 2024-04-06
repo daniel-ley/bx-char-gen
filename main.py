@@ -1,83 +1,13 @@
 from random import randint, choice
 import copy
+from look_up_tables import stats, languages, xp_for_second_level, \
+    saving_throws, class_hit_dice, equipment_costs
 
-stats = ['Str', 'Int', 'Wis', 'Dex', 'Con', 'Cha',]
-number_of_characters_to_create = 100
+
+number_of_characters_to_create = 3
+reroll_low_hp = True
 low_dice_result = 2
 human_weighting = 50
-languages = [
-    'Bugbear', 'Dopplganger', 'Dragon', 'Dwarvish', 'Elvish', 
-    'Gargoyle', 'Gnoll', 'Gnome', 'Goblin', 'Halfling', 
-    'Harpy', 'Hobgolin', 'Kobold', 'Lizard Man', 'Medusa',
-    'Minotaur', 'Ogre', 'Orc', 'Pixie', 'Human Dialect',]
-
-xp_for_second_level = {
-'cleric' :  1500,
-'dwarf' : 2200,
-'halfling' : 2000,
-'elf' : 4000,
-'fighter' : 2000,
-'magic user' : 2500,
-'thief' : 1200,
-}
-
-saving_throws = {
-'normal_man' : 
-{'death_ray_or_poison' : 14,
-'magic_wands' : 15,
-'paralysis_or_turn_to_stone' : 16,
-'dragon_breath' : 17,
-'rods_staves_or_spells' : 17},
-
-'cleric' : 
-{'death_ray_or_poison' : 11,
-'magic_wands' : 12,
-'paralysis_or_turn_to_stone' : 14,
-'dragon_breath' : 16,
-'rods_staves_or_spells' : 15},
-
-'dwarf' : 
-{'death_ray_or_poison' : 10,
-'magic_wands' : 11,
-'paralysis_or_turn_to_stone' : 12,
-'dragon_breath' : 13,
-'rods_staves_or_spells' : 14},
-
-'halfling' : 
-{'death_ray_or_poison' : 10,
-'magic_wands' : 11,
-'paralysis_or_turn_to_stone' : 12,
-'dragon_breath' : 13,
-'rods_staves_or_spells' : 14},
-
-'elf' : 
-{'death_ray_or_poison' : 12,
-'magic_wands' : 13,
-'paralysis_or_turn_to_stone' : 13,
-'dragon_breath' : 15,
-'rods_staves_or_spells' : 15},
-
-'fighter' : 
-{'death_ray_or_poison' : 12,
-'magic_wands' : 13,
-'paralysis_or_turn_to_stone' : 14,
-'dragon_breath' : 15,
-'rods_staves_or_spells' : 16},
-
-'magic user' : 
-{'death_ray_or_poison' : 13,
-'magic_wands' : 14,
-'paralysis_or_turn_to_stone' : 13,
-'dragon_breath' : 16,
-'rods_staves_or_spells' : 15},
-
-'thief' : 
-{'death_ray_or_poison' : 13,
-'magic_wands' : 14,
-'paralysis_or_turn_to_stone' : 13,
-'dragon_breath' : 16,
-'rods_staves_or_spells' : 15},
-}
 
 
 def dice_roller(dice_count: int, dice_size: int, reroll_low_result: bool) -> int:
@@ -100,7 +30,7 @@ def dice_roller(dice_count: int, dice_size: int, reroll_low_result: bool) -> int
 def stats_roller() -> dict:
 
     stat_block = {}
-    stat_block['character_class'] = 0
+    stat_block['character_class'] = None
 
     for characteristic in stats:
         stat_block[characteristic] = dice_roller(3, 6, False)
@@ -282,25 +212,9 @@ def class_chooser(statistics_block: dict) -> dict:
 
 def roll_hp(character: dict, con_bonus: int) -> dict:
 
-    hp = 0
-
-    if character['character_class'] == 'Cleric':
-        hp = dice_roller(1, 6, True)
-    elif character['character_class'] == 'Fighter':
-        hp = dice_roller(1, 8, True)
-    elif character['character_class'] == 'Magic User':
-        hp = dice_roller(1, 4, True) 
-    elif character['character_class'] == 'Thief':
-        hp = dice_roller(1, 4, True)
-    elif character['character_class'] == 'Dwarf':
-        hp = dice_roller(1, 8, True)
-    elif character['character_class'] == 'Elf':
-        hp = dice_roller(1, 6, True)
-    elif character['character_class'] == 'Halfling':
-        hp = dice_roller(1, 6, True)
-
-    hp = hp + con_bonus
-    
+    hit_dice_max = class_hit_dice[character['character_class'].lower()]
+    hp = dice_roller(1, hit_dice_max, reroll_low_hp)
+    hp += con_bonus
     character['HP'] = hp
 
     return character
@@ -342,6 +256,16 @@ def determine_starting_gold():
     return dice_roller(3, 6, False) * 10
 
 
+def equip_character(character: dict, gold: int):
+    equipment = "none"
+    if character['character_class'] in ['Elf', 'Fighter',]:
+        equipment = "Sword"
+        gold = gold - 10
+    # To Do - Added equipment shopping logic
+
+    return equipment, gold
+
+
 def main() -> None:
     for _ in range(number_of_characters_to_create):
         char_attributes = stats_roller()
@@ -352,9 +276,11 @@ def main() -> None:
         saves = determine_saving_throws(character_attributes, saving_throws, \
             stat_bonuses['Wis'])
         gold = determine_starting_gold()
+        equipment, gold = equip_character(character_attributes, gold)
+
         
         print(f'{character_attributes}\nStat Bonuses: {stat_bonuses}\n{determine_charisma_mods(char_attributes["Cha"])}')
-        print(f'{saves}\nStarting Gold : {gold}')
+        print(f'{saves}\nStarting Gold : {gold} Equipment : {equipment}')
         print(f'Prime Requisite XP Mod : {int(determine_prime_requisite_xp_mod(char_attributes) * 100)}%  ', end='')
         print(f'XP for Next Level : {xp_for_second_level[char_attributes["character_class"].lower()]}')
         print(f'Languages: {determine_languages(character_attributes)}')
