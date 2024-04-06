@@ -30,7 +30,7 @@ def dice_roller(dice_count: int, dice_size: int, reroll_low_result: bool) -> int
 def stats_roller() -> dict:
 
     stat_block = {}
-    stat_block['character_class'] = None
+    stat_block['character_class'] = 0
 
     for characteristic in stats:
         stat_block[characteristic] = dice_roller(3, 6, False)
